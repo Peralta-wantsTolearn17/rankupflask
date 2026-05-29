@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from textwrap import dedent
@@ -8,7 +10,13 @@ app.secret_key = 'your_secret_key_here'
 # =========================================================
 # DATABASE CONFIGURATION (Inayos para sa XAMPP MySQL mo, boss)
 # =========================================================
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/finalrankup'
+
+
+if os.getenv('RENDER'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///finalrankup.db'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/finalrankup'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
