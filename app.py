@@ -397,7 +397,7 @@ def create_subject():
         db.text("SELECT * FROM subjects ORDER BY subject_name ASC")
     ).mappings().all()
 
-    return render_template('teacherPages/createSubject.html', subjects=subjects_list)
+    return render_template('teacherPages/createsubject.html', subjects=subjects_list)
 
 @app.route('/teacher/student-grades', methods=['GET', 'POST'])
 def student_grades():
