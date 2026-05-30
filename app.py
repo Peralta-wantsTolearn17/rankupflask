@@ -1,15 +1,40 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from textwrap import dedent
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
 # =========================================================
-# DATABASE CONFIGURATION (Inayos para sa XAMPP MySQL mo, boss)
+# DATABASE CONFIGURATION (Bagong Variable para Ma-bypass ang Cache)
 # =========================================================
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/finalrankup'
+# Babasahin ang bagong variable 'AIVEN_DB_URI' para mapilitang mag-refresh ang Vercel container.
+raw_uri = os.environ.get('AIVEN_DB_URI')
+
+if raw_uri:
+
+    # Convert mysql:// to mysql+pymysql://
+    if raw_uri.startswith('mysql://'):
+        raw_uri = raw_uri.replace('mysql://', 'mysql+pymysql://', 1)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = raw_uri
+
+    # SSL configuration for Aiven MySQL
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {
+            "ssl": {
+                "ssl_disabled": False
+            }
+        }
+    }
+
+else:
+    # Local XAMPP database
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/finalrankup'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 @app.route('/', methods=['GET', 'POST'])
@@ -54,7 +79,6 @@ def landing_page():
                 elif teacher_query['role'] == 'teacher':
                     return redirect(url_for('teacher_dashboard'))
         
-        # Kung walang nag-match na criteria:
         error = "Invalid username or password"
         
     return render_template('landingPage.html', error=error)
@@ -377,7 +401,7 @@ def create_subject():
 
 @app.route('/teacher/student-grades', methods=['GET', 'POST'])
 def student_grades():
-    if 'user_id' not in session or session.get('role') == 'student':
+    if 'user_id' not in session or session.get('role') != 'admin' and session.get('role') != 'teacher':
         flash('Please login first', 'error')
         return redirect(url_for('teacher_login'))
 
@@ -583,7 +607,7 @@ def edit_student(student_id):
         return redirect(url_for('admin_dashboard'))
 
     return render_template('editStudent.html', row=row)
-#Edit 
+
 @app.route('/admin/edit-subject/<int:subject_id>', methods=['GET', 'POST'])
 def edit_subject(subject_id):
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -669,9 +693,5 @@ def edit_teacher(teacher_id):
 
     return render_template('editTeacher.html', row=row)
 
-# =========================================================
-# SERVER STARTER (DAPAT MANDITO ITO SA PINAKADULO NG FILE, BOSS)
-# =========================================================
 if __name__ == '__main__':
-    # Binuksan ang pinto para sa cellphone (host='0.0.0.0')
     app.run(host='0.0.0.0', port=5000, debug=True)
