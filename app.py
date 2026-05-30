@@ -10,7 +10,7 @@ app.secret_key = 'your_secret_key_here'
 # DATABASE CONFIGURATION (Bagong Variable para Ma-bypass ang Cache)
 # =========================================================
 # Babasahin ang bagong variable 'AIVEN_DB_URI' para mapilitang mag-refresh ang Vercel container.
-raw_uri = os.environ.get('AIVEN_DB_URI')
+raw_uri = os.environ.get('DATABASE_URI')
 
 if raw_uri:
 
